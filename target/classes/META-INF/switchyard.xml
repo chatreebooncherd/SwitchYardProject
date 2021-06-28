@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><sy:switchyard xmlns:sy="urn:switchyard-config:switchyard:2.0" xmlns="urn:switchyard-config:switchyard:2.0" xmlns:bean="urn:switchyard-component-bean:config:2.0" xmlns:resteasy="urn:switchyard-component-resteasy:config:2.0" xmlns:sca="http://docs.oasis-open.org/ns/opencsa/sca/200912" name="topworst" targetNamespace="urn:th.co.ais.mynetwork.topworst:topworst:1.0">
+    <sca:composite name="topworst" targetNamespace="urn:th.co.ais.mynetwork.topworst:topworst:1.0">
+        <sca:service name="TopWorstInterface" promote="TopWorstInterfaceBean/TopWorstInterface">
+            <sca:interface.java interface="th.co.ais.mynetwork.topworst.TopWorstInterface"/>
+            <resteasy:binding.rest name="rest1">
+                <resteasy:interfaces>th.co.ais.mynetwork.topworst.TopWorstRestResource</resteasy:interfaces>
+                <resteasy:contextPath>MyNetwork/sevice</resteasy:contextPath>
+            </resteasy:binding.rest>
+        </sca:service>
+        <sca:component name="TopWorstInterfaceBean">
+            <bean:implementation.bean class="th.co.ais.mynetwork.topworst.TopWorstInterfaceBean"/>
+            <sca:service name="TopWorstInterface">
+                <sca:interface.java interface="th.co.ais.mynetwork.topworst.TopWorstInterface"/>
+            </sca:service>
+        </sca:component>
+    </sca:composite>
+</sy:switchyard>
