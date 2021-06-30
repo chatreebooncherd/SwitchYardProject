@@ -5,7 +5,7 @@ import th.co.ais.mynetwork.module.enumeration.ExceptionType;
 import th.co.ais.mynetwork.module.util.ExceptionHandle;
 
 public class DBConnection {
-	public static final String TWC = "mynetwork.global.datasource.name";
+	public static final String TWC = "mynetwork.global.datasource.name2"; //mynetwork.global.datasource.name
 	
 	public static void check(Database db, String methodName) throws Exception {
 		if (db.getConn() == null) {

@@ -3,9 +3,14 @@ package th.co.ais.mynetwork.topworst.repository;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
+
+import oracle.jdbc.OracleCallableStatement;
+import oracle.jdbc.OracleTypes;
 import th.co.ais.mynetwork.module.database.Database;
 import th.co.ais.mynetwork.module.enumeration.ExceptionType;
 import th.co.ais.mynetwork.module.log.ErrorLog;
@@ -21,14 +26,15 @@ public class WorkFlowRepository {
 	
 	public List<TopWorstCell> getTopWorstCell(SearchTopWorstCellRequest request) throws Exception {
 		FunctionLog functionLog = new FunctionLog(Thread.currentThread().getStackTrace()[1].getMethodName());
-		CallableStatement properCase = null;
+		OracleCallableStatement  properCase = null;
 		List<TopWorstCell> dataLists = new ArrayList<TopWorstCell>();
 
 		Database db = new Database(DBConnection.TWC);
 		DBConnection.check(db, "getTopWorstCell");
 		
 		try {
-
+			/*
+			//postGreSQL
 			String sql = "{CALL BATCH_GET_TOP_WORST_CELL(?)}";
 		    LOGGER.debug("getTopWorstCell :SQL:" + sql);
 
@@ -51,15 +57,37 @@ public class WorkFlowRepository {
 		    	LOGGER.info("getTopWorstCell: " + sql + " :DataNotFound");
 		    	throw new ExceptionHandle(ExceptionType.DataNotFound, "getTopWorstCell : Data Not Found");
 		    }
+		    */
+			
+			//Oracle
+			String sql = "{? = call pmr.ftest(?)}";
+			LOGGER.debug("searchLocation :SQL:" + sql);
+			int i = 1;
+			db.getParameterMapOutParameter().put(i++, OracleTypes.CURSOR);
+			db.getParameterMap().put(i++, "bbbbbbbbbb");
+			//db.getParameterMapNull().put(i++, java.sql.Types.VARCHAR);//insert null
+			
+			ResultSet result = db.callStoreOutParameter(sql);
+			
+			if (result.isBeforeFirst()) {
+				while (result.next()) {
+					System.out.println("============>"+result.getString("name"));
+				}
+			} else {
+				LOGGER.info("searchLocation: " + sql + " :DataNotFound");
+				throw new ExceptionHandle(ExceptionType.DataNotFound, "searchLocation : DataNotFound");
+			}					
 			
 		} catch (SQLException e) {
+			e.printStackTrace();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} finally {
-		    properCase.close();
+		    //properCase.close();
 		    db.closeConnection();
 		}
 		
@@ -78,6 +106,8 @@ public class WorkFlowRepository {
 		
 		try {
 
+			/*
+			//postGreSQL
 			String sql = "{CALL ftest3(?,?)}";
 		    LOGGER.debug("saveTopWorstCell :SQL:" + sql);
 
@@ -90,17 +120,49 @@ public class WorkFlowRepository {
 		    	resultSave = true;
 		    	db.getConn().commit();
 		    }
-		    			
+		    */
+			
+			
+
+			//Oracle
+			db.getParameterMap().clear();
+			db.getParameterMapNull().clear();
+			db.getParameterMapOutParameter().clear();
+
+			int i = 1;
+			//db.getParameterMap().put(i++, "xxxx");
+			//db.getParameterMapNull().put(i++, java.sql.Types.VARCHAR);
+			//db.getParameterMap().put(i++, null);
+			db.getParameterMap().put(i++, "xxxx");
+
+			db.getParameterMapOutParameter().put(i++, OracleTypes.CURSOR);
+
+			String sql = "{call ptest1(?,?)}";
+			ResultSet result = db.callStoreOutParameter(sql);
+
+			if (result.isBeforeFirst()) {
+				while (result.next()) {
+					System.out.println("=======>"+result.getString("name") );
+				}
+				db.getConn().commit();
+			} else {
+				//data not found
+			}
+			
+			
+			
 		} catch (SQLException e) {
+			e.printStackTrace();
 			db.getConn().rollback();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} catch (Exception e) {
+			e.printStackTrace();
 			db.getConn().rollback();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} finally {
-		    properCase.close();
+		    //properCase.close();
 		    db.closeConnection();
 		}
 		
