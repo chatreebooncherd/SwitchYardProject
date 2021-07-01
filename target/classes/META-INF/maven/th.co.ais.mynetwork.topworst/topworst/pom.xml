@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>th.co.ais.mynetwork.topworst</groupId>
   <artifactId>topworst</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>th.co.ais.mynetwork.topworst:topworst</name>
   <properties>
     <switchyard.version>2.1.0.Final</switchyard.version>

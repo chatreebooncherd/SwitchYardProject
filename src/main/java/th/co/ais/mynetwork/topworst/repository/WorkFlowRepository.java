@@ -3,13 +3,10 @@ package th.co.ais.mynetwork.topworst.repository;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
 
-import oracle.jdbc.OracleCallableStatement;
 import oracle.jdbc.OracleTypes;
 import th.co.ais.mynetwork.module.database.Database;
 import th.co.ais.mynetwork.module.enumeration.ExceptionType;
@@ -24,26 +21,53 @@ import th.co.ais.mynetwork.topworst.model.TopWorstCell;
 public class WorkFlowRepository {
 	private static final Logger LOGGER = Logger.getLogger(WorkFlowRepository.class);
 	
+/*
+CREATE OR REPLACE FUNCTION mynetwork.batch_get_top_worst_cell(in_param1 character varying)
+ RETURNS TABLE(id integer, cell_type character varying, severity character varying, rncname character varying, nodebname character varying, cellname character varying, site_code character varying)
+ LANGUAGE plpgsql
+AS $function$
+
+BEGIN
+	
+RETURN QUERY 
+
+        		SELECT 
+				tw.id,
+				tw.cell_type,
+				tw.severity,
+				tw.rncname,
+				tw.nodebname,
+				tw.cellname,
+				tw.site_code
+				FROM mynetwork.top_worst tw 
+				;
+
+END; 
+
+$function$
+;
+	 
+*/
+	
+	
 	public List<TopWorstCell> getTopWorstCell(SearchTopWorstCellRequest request) throws Exception {
 		FunctionLog functionLog = new FunctionLog(Thread.currentThread().getStackTrace()[1].getMethodName());
-		OracleCallableStatement  properCase = null;
+		CallableStatement  properCase = null;
 		List<TopWorstCell> dataLists = new ArrayList<TopWorstCell>();
 
 		Database db = new Database(DBConnection.TWC);
 		DBConnection.check(db, "getTopWorstCell");
 		
 		try {
-			/*
-			//postGreSQL
+			
 			String sql = "{CALL BATCH_GET_TOP_WORST_CELL(?)}";
 		    LOGGER.debug("getTopWorstCell :SQL:" + sql);
-
+		    
 		    int i = 1;
 		    properCase = db.getConn().prepareCall(sql);
 		    properCase.setString(i++, "");
 		    ResultSet result = properCase.executeQuery();
 		    if (result.isBeforeFirst()) {
-			if (result.isBeforeFirst()) {
 			    while (result.next()) {
 			    	TopWorstCell topWorstCell = new TopWorstCell();
 			    	topWorstCell.setId(result.getInt("id"));
@@ -52,49 +76,44 @@ public class WorkFlowRepository {
 			    	topWorstCell.setCellname(result.getString("cellname"));
 			    	dataLists.add(topWorstCell);
 			    }
-			}
 		    } else {
 		    	LOGGER.info("getTopWorstCell: " + sql + " :DataNotFound");
 		    	throw new ExceptionHandle(ExceptionType.DataNotFound, "getTopWorstCell : Data Not Found");
 		    }
-		    */
-			
-			//Oracle
-			String sql = "{? = call pmr.ftest(?)}";
-			LOGGER.debug("searchLocation :SQL:" + sql);
-			int i = 1;
-			db.getParameterMapOutParameter().put(i++, OracleTypes.CURSOR);
-			db.getParameterMap().put(i++, "bbbbbbbbbb");
-			//db.getParameterMapNull().put(i++, java.sql.Types.VARCHAR);//insert null
-			
-			ResultSet result = db.callStoreOutParameter(sql);
-			
-			if (result.isBeforeFirst()) {
-				while (result.next()) {
-					System.out.println("============>"+result.getString("name"));
-				}
-			} else {
-				LOGGER.info("searchLocation: " + sql + " :DataNotFound");
-				throw new ExceptionHandle(ExceptionType.DataNotFound, "searchLocation : DataNotFound");
-			}					
-			
+		    
 		} catch (SQLException e) {
-			e.printStackTrace();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} finally {
-		    //properCase.close();
-		    db.closeConnection();
+		    try {
+				db.closeConnection();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		LOGGER.info(functionLog.end());
 		return dataLists;	
 	}
-		
+			
+
+/*
+CREATE OR REPLACE FUNCTION mynetwork.ftest3(id1 integer, name1 character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+    DECLARE
+      --ref refcursor;
+    BEGIN
+      	insert into  mynetwork.top_worst(id,cellname) values(id1, name1); 
+    END;
+    $function$
+;	 	 
+*/
+	
 	public boolean saveTopWorstCell(SaveTopWorstCellRequest request) throws Exception {
 		FunctionLog functionLog = new FunctionLog(Thread.currentThread().getStackTrace()[1].getMethodName());
 		CallableStatement properCase = null;
@@ -106,8 +125,6 @@ public class WorkFlowRepository {
 		
 		try {
 
-			/*
-			//postGreSQL
 			String sql = "{CALL ftest3(?,?)}";
 		    LOGGER.debug("saveTopWorstCell :SQL:" + sql);
 
@@ -120,11 +137,110 @@ public class WorkFlowRepository {
 		    	resultSave = true;
 		    	db.getConn().commit();
 		    }
-		    */
 			
-			
+		} catch (SQLException e) {
+			db.getConn().rollback();
+			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
+			throw e;
+		} catch (Exception e) {
+			db.getConn().rollback();
+			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
+			throw e;
+		} finally {
+		    try {
+				db.closeConnection();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		LOGGER.info(functionLog.end());
+		return resultSave;	
+	}	
+	
+	
+/*
+CREATE OR REPLACE function PMR.ftest(f_name in varchar2) return SYS_REFCURSOR is
+ out_cursor SYS_REFCURSOR;
+ begin
+  
+    OPEN out_cursor FOR SELECT name||f_name AS name FROM pmr.temp1;
+    RETURN out_cursor;
+ end;
+*/
+	
+	public List<TopWorstCell> getTopWorstCellTemp(SearchTopWorstCellRequest request) throws Exception {
+		FunctionLog functionLog = new FunctionLog(Thread.currentThread().getStackTrace()[1].getMethodName());
+		List<TopWorstCell> dataLists = new ArrayList<TopWorstCell>();
 
-			//Oracle
+		Database db = new Database(DBConnection.TWC);
+		DBConnection.check(db, "getTopWorstCell");
+		
+		try {
+			
+			String sql = "{? = call pmr.ftest(?)}";
+			LOGGER.debug("searchLocation :SQL:" + sql);
+			int i = 1;
+			db.getParameterMapOutParameter().put(i++, OracleTypes.CURSOR);
+			db.getParameterMap().put(i++, "bbbbbbbbbb");
+			//db.getParameterMapNull().put(i++, java.sql.Types.VARCHAR);//insert null
+			
+			ResultSet result = db.callStoreOutParameter(sql);
+			
+				while (result.next()) {
+					TopWorstCell topWorstCell = new TopWorstCell();
+					topWorstCell.setCellname(result.getString("name"));
+					dataLists.add(topWorstCell);
+				}
+				
+				if (dataLists.size() == 0) {
+					LOGGER.info("getTopWorstCellTemp: " + sql + " :DataNotFound");
+					throw new ExceptionHandle(ExceptionType.DataNotFound, "getTopWorstCellTemp : DataNotFound");
+				}
+					
+			
+		} catch (SQLException e) {
+			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
+			throw e;
+		} catch (Exception e) {
+			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
+			throw e;
+		} finally {
+		    try {
+				db.closeConnection();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		LOGGER.info(functionLog.end());
+		return dataLists;	
+	}	
+		
+
+	
+/*
+CREATE OR REPLACE procedure PMR.ptest1(name varchar2,refcur OUT SYS_REFCURSOR) is
+  i number;
+ begin
+     INSERT INTO pmr.TEMP1 VALUES('TEST5',name);
+     --COMMIT;
+	 OPEN refcur FOR SELECT name FROM pmr.TEMP1;
+ end;
+*/
+	
+	public boolean saveTopWorstCellTemp(SaveTopWorstCellRequest request) throws Exception {
+		FunctionLog functionLog = new FunctionLog(Thread.currentThread().getStackTrace()[1].getMethodName());
+		CallableStatement properCase = null;
+		boolean resultSave = false;
+
+		Database db = new Database(DBConnection.TWC);
+		DBConnection.check(db, "saveTopWorstCell");
+		db.getConn().setAutoCommit(false);
+		
+		try {
+
+			
 			db.getParameterMap().clear();
 			db.getParameterMapNull().clear();
 			db.getParameterMapOutParameter().clear();
@@ -139,35 +255,39 @@ public class WorkFlowRepository {
 
 			String sql = "{call ptest1(?,?)}";
 			ResultSet result = db.callStoreOutParameter(sql);
+			System.out.println("===============>"+result.isBeforeFirst());
 
-			if (result.isBeforeFirst()) {
-				while (result.next()) {
-					System.out.println("=======>"+result.getString("name") );
-				}
-				db.getConn().commit();
-			} else {
-				//data not found
+			while (result.next()) {
+				System.out.println("=======>"+result.getString("name") );
+				resultSave = true;
 			}
 			
-			
+			if (resultSave == false) {
+				LOGGER.info("getTopWorstCellTemp: " + sql + " :DataNotFound");
+				throw new ExceptionHandle(ExceptionType.DataNotFound, "getTopWorstCellTemp : DataNotFound");
+			}
+					
+			db.getConn().commit();			
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
 			db.getConn().rollback();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
 			db.getConn().rollback();
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getMessage()));
 			throw e;
 		} finally {
-		    //properCase.close();
-		    db.closeConnection();
+		    try {
+				db.closeConnection();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		LOGGER.info(functionLog.end());
 		return resultSave;	
 	}	
-	
+
+
 }

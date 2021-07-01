@@ -20,7 +20,7 @@ public class TopWorstCellService {
 		WorkFlowRepository repository = new WorkFlowRepository();
 		
 		try {
-			response.setData(repository.getTopWorstCell(request));
+			response.setData(repository.getTopWorstCellTemp(request));
 		} catch (ExceptionHandle e) {
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getErrorType().getMessage()));
 			response.setError(e.getErrorType());
@@ -37,7 +37,7 @@ public class TopWorstCellService {
 		WorkFlowRepository repository = new WorkFlowRepository();
 		
 		try {
-			response.setResult(repository.saveTopWorstCell(request));
+			response.setResult(repository.saveTopWorstCellTemp(request));
 		} catch (ExceptionHandle e) {
 			LOGGER.error(ErrorLog.log(Thread.currentThread().getStackTrace()[1].getMethodName(), request, e.getErrorType().getMessage()));
 			response.setError(e.getErrorType());

@@ -24,7 +24,7 @@ public class TopWorstInterfaceBean implements TopWorstInterface {
 	
 	public TopWorstInterfaceBean() {
 		LOGGER.info("Log4j appender configuration is successful !!");
-		PropertyConfigurator.configure("/app/www/configuration/writeoff/log4j.properties");
+		//PropertyConfigurator.configure("/app/www/configuration/writeoff/log4j.properties");
 //		PropertyConfigurator.configure("D:\\WFH\\WriteOff\\config\\log4j.properties"); // for Test local
 		LOGGER.debug("Log4j appender configuration is successful !!");
 	}	
